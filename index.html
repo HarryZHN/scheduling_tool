@@ -5,9 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Schedule tool</title>
   <!-- 引入Layui -->
-  <link rel="stylesheet" href="./layui.min.css">
-  <script src="./layui.min.js"></script>
-  <link href="./font-awesome.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="./css/layui.min.css">
+  <script src="./js/layui.min.js"></script>
   
   <style>
     body {
@@ -337,13 +336,13 @@
     <div class="header">
       <div class="view-controls">
         <button class="layui-btn layui-btn-sm" id="addScheduleBtn">
-          <i class="fa fa-plus"></i> New Schedule
+          <i class="layui-icon layui-icon-add-1"></i> New Schedule
         </button>
         <div class="view-btn active" id="calendarViewBtn">
-          <i class="fa fa-calendar"></i> Calendar
+          <i class="layui-icon layui-icon-date"></i> Calendar
         </div>
         <div class="view-btn" id="listViewBtn">
-          <i class="fa fa-list"></i> List
+          <i class="layui-icon layui-icon-list"></i> List
         </div>
       </div>
       <div class="view-controls">
@@ -351,15 +350,15 @@
        
       <!-- 语言切换按钮 -->
         <div class="view-btn" id="languageToggle">
-          <i class="fa fa-globe"></i> <span id="currentLanguage">English</span>
+          <i class="layui-icon layui-icon-website"></i> <span id="currentLanguage">English</span>
         </div>
         <!-- 源码链接 -->
         <a href="https://github.com/HarryZHN/scheduling_tool" target="_blank" class="view-btn" id="sourceCodeLink">
-          <i class="fa fa-github"></i> <span id="sourceCodeText">Source Code</span>
+          <i class="layui-icon layui-icon-github"></i> <span id="sourceCodeText">Source Code</span>
         </a>
         <!-- 激励作者 -->
         <div class="view-btn" id="rewardAuthor">
-          <i class="fa fa-heart"></i> <span id="rewardText">Reward Author</span>
+          <i class="layui-icon layui-icon-heart-fill"></i> <span id="rewardText">Reward Author</span>
         </div>
       </div>
     </div>
@@ -370,10 +369,10 @@
         <div class="calendar-title" id="calendarMonth"></div>
         <div>
           <button class="layui-btn layui-btn-primary layui-btn-sm" id="prevMonth">
-            <i class="fa fa-chevron-left"></i>
+            <i class="layui-icon layui-icon-left"></i>
           </button>
           <button class="layui-btn layui-btn-primary layui-btn-sm" id="nextMonth">
-            <i class="fa fa-chevron-right"></i>
+            <i class="layui-icon layui-icon-right"></i>
           </button>
         </div>
       </div>
@@ -584,9 +583,9 @@
         // 翻译标题
         document.title = translations[currentLanguage]['Schedule tool'];
         // 翻译按钮文本
-        document.getElementById('calendarViewBtn').innerHTML = `<i class="fa fa-calendar"></i> ${translations[currentLanguage]['Calendar']}`;
-        document.getElementById('listViewBtn').innerHTML = `<i class="fa fa-list"></i> ${translations[currentLanguage]['List']}`;
-        document.getElementById('addScheduleBtn').innerHTML = `<i class="fa fa-plus"></i> ${translations[currentLanguage]['New Schedule']}`;
+        document.getElementById('calendarViewBtn').innerHTML = `<i class="layui-icon layui-icon-date"></i> ${translations[currentLanguage]['Calendar']}`;
+        document.getElementById('listViewBtn').innerHTML = `<i class="layui-icon layui-icon-list"></i> ${translations[currentLanguage]['List']}`;
+        document.getElementById('addScheduleBtn').innerHTML = `<i class="layui-icon layui-icon-add-1"></i> ${translations[currentLanguage]['New Schedule']}`;
         document.getElementById('sourceCodeText').textContent = translations[currentLanguage]['Source Code'];
         document.getElementById('rewardText').textContent = translations[currentLanguage]['Reward Author'];
         
@@ -770,7 +769,7 @@
         if (sortedSchedules.length === 0) {
           document.getElementById('scheduleList').innerHTML = `
             <div class="empty-state">
-              <i class="fa fa-calendar-o"></i>
+              <i class="layui-icon layui-icon-date"></i>
               <div>${translations[currentLanguage]['No Data']}</div>
             </div>
           `;
@@ -790,7 +789,7 @@
                 ${schedule.description ? `<div class="list-desc">${schedule.description}</div>` : ''}
               </div>
               <button class="layui-btn layui-btn-danger layui-btn-sm delete-btn" data-id="${schedule.id}">
-                <i class="fa fa-trash-o"></i>
+                <i class="layui-icon layui-icon-delete"></i>
               </button>
             </div>
           `;
