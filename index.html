@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Schedule tool</title>
+  <!-- 引入Layui -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/layui/2.8.18/css/layui.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/layui/2.8.18/layui.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  
+  <style>
+    body {
+      background-color: #f2f3f5;
+      padding: 15px;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    .header {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+    
+    @media (min-width: 768px) {
+      .header {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+      }
+    }
+    
+    .title {
+      font-size: 24px;
+      font-weight: bold;
+      color: #333;
+    }
+    
+    .view-controls {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    
+    .view-btn {
+      padding: 5px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    
+    .view-btn.active {
+      background-color: #1E9FFF;
+      color: white;
+    }
+    
+    .view-btn:not(.active) {
+      background-color: #f2f3f5;
+      color: #333;
+    }
+    
+    .view-btn:not(.active):hover {
+      background-color: #e6e6e6;
+    }
+    
+    .card {
+      background-color: white;
+      border-radius: 4px;
+      box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      padding: 15px;
+    }
+    
+    .calendar-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+    
+    .calendar-title {
+      font-size: 16px;
+      font-weight: bold;
+    }
+    
+    .weekdays {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 5px;
+      margin-bottom: 5px;
+    }
+    
+    .weekday {
+      text-align: center;
+      padding: 8px 0;
+      font-weight: 500;
+      color: #666;
+      background-color: #f5f7fa;
+      border-radius: 4px;
+    }
+    
+    .weekday.weekend {
+      color: #FF5722;
+    }
+    
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 5px;
+    }
+    
+    .calendar-day {
+      min-height: 80px;
+      padding: 5px;
+      border: 1px solid #e6e6e6;
+      border-radius: 4px;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .calendar-day.other-month {
+      background-color: #fafafa;
+      opacity: 0.6;
+    }
+    
+    .day-number {
+      font-size: 14px;
+      margin-bottom: 5px;
+      padding: 2px 5px;
+      display: inline-block;
+    }
+    
+    .day-number.today {
+      background-color: #1E9FFF;
+      color: white;
+      border-radius: 50%;
+    }
+    
+    .schedule-item {
+      padding: 2px 5px;
+      margin-bottom: 3px;
+      border-radius: 2px;
+      color: white;
+      font-size: 12px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      cursor: pointer;
+    }
+    
+    .list-item {
+      padding: 15px;
+      border-bottom: 1px solid #e6e6e6;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .list-item:last-child {
+      border-bottom: none;
+    }
+    
+    .list-info {
+      flex: 1;
+    }
+    
+    .list-title {
+      font-weight: 500;
+      margin-bottom: 5px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .list-date {
+      color: #666;
+      font-size: 12px;
+    }
+    
+    .list-desc {
+      color: #999;
+      font-size: 13px;
+      margin-top: 5px;
+    }
+    
+    .color-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: 50px 0;
+      color: #999;
+    }
+    
+    .empty-state i {
+      font-size: 48px;
+      margin-bottom: 15px;
+      color: #ddd;
+    }
+    
+    /* 弹窗表单样式 */
+    .modal-form .layui-form-item {
+      margin-bottom: 15px;
+      margin-right: 15px;
+    }
+    
+    .modal-form .layui-form-label {
+      width: 90px;
+    }
+    
+    .modal-form .layui-input-block {
+      margin-left: 120px;
+    }
+    
+    /* 手机端响应式设计 - 更彻底的适配方案 */
+    @media (max-width: 768px) {
+      /* 弹窗容器样式 */
+      .layui-layer {
+        max-width: 100% !important;
+        margin: 0 10px;
+      }
+      
+      .layui-layer-content {
+        max-height: 80vh;
+        overflow-y: auto;
+      }
+      
+      /* 表单布局调整 */
+      .modal-form {
+        padding: 20px;
+      }
+      
+      .modal-form .layui-form-item {
+        margin-bottom: 12px;
+      }
+      
+      /* 垂直布局的表单 */
+      .modal-form .layui-form-label {
+        display: block;
+        width: 100% !important;
+        padding-right: 0;
+        text-align: left;
+        margin-bottom: 5px;
+        font-size: 14px;
+      }
+      
+      .modal-form .layui-input-block {
+        margin-left: 0 !important;
+        width: 100%;
+      }
+      
+      /* 输入控件样式优化 */
+      .modal-form .layui-input,
+      .modal-form .layui-textarea {
+        padding: 8px 10px;
+        font-size: 14px;
+        width: 100%;
+        box-sizing: border-box;
+      }
+      
+      /* 日期范围选择器样式优化 */
+      .range-picker {
+        position: relative;
+        width: 100%;
+      }
+      
+      .range-separator {
+        font-size: 12px;
+        padding: 0 3px;
+      }
+      
+      /* 按钮样式优化 */
+      .modal-form .layui-btn {
+        width: 48%;
+        padding: 6px 0;
+        margin: 0 1%;
+      }
+    }
+    
+    /* 小屏幕适配优化 */
+    @media (max-width: 480px) {
+      .modal-form .layui-form-item {
+        margin-bottom: 10px;
+      }
+      
+      .modal-form .layui-form-label {
+        font-size: 13px;
+      }
+      
+      .modal-form .layui-input,
+      .modal-form .layui-textarea {
+        font-size: 13px;
+      }
+      
+      /* 按钮样式进一步优化 */
+      .modal-form .layui-btn {
+        width: 100%;
+        margin: 5px 0;
+      }
+    }
+    
+    /* 确保弹窗在不同设备上正常显示 */
+    .layui-layer-page {
+      overflow: visible !important;
+    }
+    
+    /* 范围选择器样式 */
+    .range-picker {
+      position: relative;
+    }
+    
+    .range-separator {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      background-color: white;
+      padding: 0 5px;
+      color: #999;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="title">
+        <button class="layui-btn layui-btn-primary" id="addScheduleBtn">
+          <i class="fa fa-plus"></i> New Schedule
+        </button>
+      </div>
+      <div class="view-controls">
+        <div class="view-btn active" id="calendarViewBtn">
+          <i class="fa fa-calendar"></i> Calendar
+        </div>
+        <div class="view-btn" id="listViewBtn">
+          <i class="fa fa-list"></i> List
+        </div>
+        
+      </div>
+    </div>
+    
+    <!-- 日历视图 -->
+    <div class="card" id="calendarView">
+      <div class="calendar-header">
+        <div class="calendar-title" id="calendarMonth"></div>
+        <div>
+          <button class="layui-btn layui-btn-primary layui-btn-sm" id="prevMonth">
+            <i class="fa fa-chevron-left"></i>
+          </button>
+          <button class="layui-btn layui-btn-primary layui-btn-sm" id="nextMonth">
+            <i class="fa fa-chevron-right"></i>
+          </button>
+        </div>
+      </div>
+      
+      <div class="weekdays">
+        <div class="weekday weekend">Sunday</div>
+        <div class="weekday">Monday</div>
+        <div class="weekday">Tuesday</div>
+        <div class="weekday">Wednesday</div>
+        <div class="weekday">Thursday</div>
+        <div class="weekday">Friday</div>
+        <div class="weekday weekend">Saturday</div>
+      </div>
+      
+      <div class="calendar-grid" id="calendarDays"></div>
+    </div>
+    
+    <!-- 列表视图 -->
+    <div class="card" id="listView" style="display: none;">
+      <div id="scheduleList"></div>
+    </div>
+  </div>
+  
+  <!-- 添加排期的弹窗内容 -->
+  <script type="text/html" id="scheduleModalTpl">
+    <form class="layui-form modal-form" lay-filter="scheduleForm">
+      <div class="layui-form-item">
+        <label class="layui-form-label">Name</label>
+        <div class="layui-input-block">
+          <input type="text" name="name" lay-verify="required|maxLength" maxlength="8" 
+                 placeholder="Please enter the name (up to 8 characters)" autocomplete="off" class="layui-input">
+        </div>
+      </div>
+      
+      <div class="layui-form-item">
+        <label class="layui-form-label">Description</label>
+        <div class="layui-input-block">
+          <textarea name="description" placeholder="Please enter the description (optional)" 
+                    class="layui-textarea" rows="3"></textarea>
+        </div>
+      </div>
+      
+      <div class="layui-form-item">
+        <label class="layui-form-label">Date Range</label>
+        <div class="layui-input-block" id="dateRange">
+          <div class="layui-input-inline">
+            <input type="text" autocomplete="off" name="startDate" id="startDate" class="layui-input" placeholder="Please enter the start date">  
+          </div>
+          <div class="layui-form-mid">-</div>
+          <div class="layui-input-inline">
+            <input type="text" autocomplete="off" name="endDate" id="endDate" class="layui-input" placeholder="Please enter the end date">
+          </div>
+        </div>
+      </div>
+      
+      <!-- 工作日天数显示 -->
+      <div class="layui-form-item">
+        <label class="layui-form-label">Workday Count</label>
+        <div class="layui-input-block">
+          <div class="layui-form-text" id="workdayCount" style="line-height: 38px;">
+            <span style="color: #1E9FFF; font-weight: 500;">Please select the date range</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="layui-form-item">
+        <div class="layui-input-block">
+          <button class="layui-btn" lay-submit lay-filter="submitSchedule">Confirm</button>
+          <button type="button" class="layui-btn layui-btn-primary" id="cancelBtn">Cancel</button>
+        </div>
+      </div>
+    </form>
+  </script>
+
+  <script>
+    layui.use(['laydate', 'layer', 'form'], function() {
+      const laydate = layui.laydate;
+      const layer = layui.layer;
+      const form = layui.form;
+      
+      // 全局变量
+      let currentDate = new Date();
+      let schedules = [];
+      let currentView = 'calendar';
+      let modalIndex = null;
+      
+      // 颜色列表，用于区分不同排期
+      const colors = [
+        '#1E9FFF', '#009688', '#FFB800', '#FF5722',
+        '#7B68EE', '#E91E63', '#03A9F4', '#8BC34A'
+      ];
+      
+      // 初始化
+      init();
+      
+      function init() {
+        // 从本地存储加载数据
+        loadSchedules();
+        
+        // 渲染日历
+        renderCalendar();
+        
+        // 渲染列表
+        renderList();
+        
+        // 绑定事件
+        bindEvents();
+        
+        // 自定义表单验证
+        form.verify({
+          maxLength: function(value) {
+            if (value.length > 8) {
+              return '事项名称不能超过8个字';
+            }
+          }
+        });
+      }
+      
+      // 从本地存储加载排期数据
+      function loadSchedules() {
+        const saved = localStorage.getItem('schedules');
+        if (saved) {
+          schedules = JSON.parse(saved);
+        }
+      }
+      
+      // 保存排期数据到本地存储
+      function saveSchedules() {
+        localStorage.setItem('schedules', JSON.stringify(schedules));
+      }
+      
+      // 渲染日历
+      function renderCalendar() {
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth();
+        
+        // 更新日历标题
+        document.getElementById('calendarMonth').textContent = `${year}年${month + 1}月`;
+        
+        // 获取当月第一天是星期几
+        const firstDay = new Date(year, month, 1).getDay();
+        // 获取当月的天数
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        
+        // 获取上个月的最后几天
+        const prevMonthDays = firstDay;
+        const prevMonth = month === 0 ? 11 : month - 1;
+        const prevMonthYear = month === 0 ? year - 1 : year;
+        const prevMonthTotalDays = new Date(prevMonthYear, prevMonth + 1, 0).getDate();
+        
+        // 生成日历HTML
+        let calendarHtml = '';
+        
+        // 添加上个月的日期
+        for (let i = 0; i < prevMonthDays; i++) {
+          const day = prevMonthTotalDays - prevMonthDays + i + 1;
+          calendarHtml += `<div class="calendar-day other-month">
+                            <div class="day-number">${day}</div>
+                          </div>`;
+        }
+        
+        // 添加当月的日期
+        for (let day = 1; day <= daysInMonth; day++) {
+          const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+          const isToday = new Date().toDateString() === new Date(dateStr).toDateString();
+          
+          // 查找当天的排期
+          const daySchedules = schedules.filter(schedule => {
+            const start = new Date(schedule.startDate);
+            const end = new Date(schedule.endDate);
+            const current = new Date(dateStr);
+            
+            return current >= start && current <= end;
+          });
+          
+          let scheduleHtml = '';
+          daySchedules.forEach(schedule => {
+            scheduleHtml += `<div class="schedule-item" style="background-color: ${schedule.color}" 
+                                 title="${schedule.name}\n${schedule.description}">
+                              ${schedule.name}
+                            </div>`;
+          });
+          
+          calendarHtml += `<div class="calendar-day">
+                            <div class="day-number ${isToday ? 'today' : ''}">${day}</div>
+                            ${scheduleHtml}
+                          </div>`;
+        }
+        
+        // 填充日历容器
+        document.getElementById('calendarDays').innerHTML = calendarHtml;
+      }
+      
+      // 渲染列表
+      function renderList() {
+        // 按开始日期排序
+        const sortedSchedules = [...schedules].sort((a, b) => {
+          return new Date(a.startDate) - new Date(b.startDate);
+        });
+        
+        if (sortedSchedules.length === 0) {
+          document.getElementById('scheduleList').innerHTML = `
+            <div class="empty-state">
+              <i class="fa fa-calendar-o"></i>
+              <div>No Data</div>
+            </div>
+          `;
+          return;
+        }
+        
+        let listHtml = '';
+        sortedSchedules.forEach(schedule => {
+          listHtml += `
+            <div class="list-item">
+              <div class="list-info">
+                <div class="list-title">
+                <span class="color-dot" style="background-color: ${schedule.color}"></span>
+                <span>${schedule.name}</span>
+              </div>
+              <div class="list-date">${schedule.startDate} to ${schedule.endDate} (${schedule.workdayCount} workdays)</div>
+                ${schedule.description ? `<div class="list-desc">${schedule.description}</div>` : ''}
+              </div>
+              <button class="layui-btn layui-btn-danger layui-btn-sm delete-btn" data-id="${schedule.id}">
+                <i class="fa fa-trash-o"></i>
+              </button>
+            </div>
+          `;
+        });
+        
+        document.getElementById('scheduleList').innerHTML = listHtml;
+        
+        // 绑定删除按钮事件
+        document.querySelectorAll('.delete-btn').forEach(btn => {
+          btn.addEventListener('click', function() {
+            const id = parseInt(this.getAttribute('data-id'));
+            deleteSchedule(id);
+          });
+        });
+      }
+      
+      // 显示添加排期弹窗
+      function showAddModal() {
+        // 使用模板渲染弹窗内容
+        const tpl = document.getElementById('scheduleModalTpl').innerHTML;
+        
+        // 打开弹窗
+        modalIndex = layer.open({
+          type: 1,
+          title: 'Create New Schedule',
+          content: tpl,
+          area: ['60%', 'auto'],
+          maxWidth: 500,
+          shade: 0.3,
+          success: function(layero) {
+            // 在弹窗成功打开后初始化日期范围选择器（左右面板联动）
+            initRangeDatePicker(layero);
+            
+            // 绑定取消按钮事件
+            layero.find('#cancelBtn').on('click', function() {
+              layer.close(modalIndex);
+            });
+          }
+        });
+      }
+      
+      // 计算工作日天数（排除周末和节假日）
+      function calculateWorkdays(startDate, endDate) {
+        // 简单的节假日列表（这里使用一些示例日期，可以根据实际需求扩展）
+        const holidays = {
+          '2024-01-01': '元旦',
+          '2024-02-10': '春节',
+          '2024-02-11': '春节',
+          '2024-02-12': '春节',
+          '2024-02-13': '春节',
+          '2024-02-14': '春节',
+          '2024-04-04': '清明节',
+          '2024-05-01': '劳动节',
+          '2024-06-10': '端午节',
+          '2024-09-17': '中秋节',
+          '2024-10-01': '国庆节',
+          '2024-10-02': '国庆节',
+          '2024-10-03': '国庆节',
+          '2024-10-04': '国庆节',
+          '2024-10-05': '国庆节'
+        };
+        
+        // 解析日期
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        
+        // 验证日期有效性
+        if (isNaN(start.getTime()) || isNaN(end.getTime()) || start > end) {
+          return 0;
+        }
+        
+        let workdayCount = 0;
+        const current = new Date(start);
+        
+        // 遍历日期范围，计算工作日数量
+        while (current <= end) {
+          const dayOfWeek = current.getDay();
+          const dateStr = current.toISOString().split('T')[0];
+          
+          // 排除周末（0和6分别代表周日和周六）和节假日
+          if (dayOfWeek !== 0 && dayOfWeek !== 6 && !holidays[dateStr]) {
+            workdayCount++;
+          }
+          
+          // 移动到下一天
+          current.setDate(current.getDate() + 1);
+        }
+        
+        return workdayCount;
+      }
+      
+      // 初始化左右面板联动的日期范围选择器
+      function initRangeDatePicker(layero) {
+        // 使用Layui的range参数实现左右面板联动的范围选择
+        laydate.render({
+          elem: '#dateRange',
+          range:['#startDate','#endDate'],
+          type: 'date',
+          rangeLinked: true,  // 开启左右面板联动的范围选择
+          format: 'yyyy-MM-dd',
+          done: function(value, startDate, endDate) {
+            // value格式为: "开始日期 至 结束日期"
+            // startDate和endDate分别为开始和结束日期的对象
+            
+            // 获取开始日期和结束日期的DOM元素
+            const startDateElem = layero.find('#startDate');
+            const endDateElem = layero.find('#endDate');
+            const workdayCountElem = layero.find('#workdayCount');
+            
+            // 获取输入的日期值
+            const start = startDateElem.val();
+            const end = endDateElem.val();
+            
+            // 如果两个日期都已选择，计算工作日天数
+            if (start && end) {
+              const workdays = calculateWorkdays(start, end);
+              workdayCountElem.html(`<span style="color: #1E9FFF; font-weight: 500;">${workdays} workdays</span>`);
+            } else {
+              workdayCountElem.html(`<span style="color: #1E9FFF; font-weight: 500;">Please select a complete date range</span>`);
+            }
+          }
+        });
+        
+        // 为开始日期和结束日期输入框添加change事件监听
+        layero.find('#startDate, #endDate').on('change', function() {
+          const startDateElem = layero.find('#startDate');
+          const endDateElem = layero.find('#endDate');
+          const workdayCountElem = layero.find('#workdayCount');
+          
+          const start = startDateElem.val();
+          const end = endDateElem.val();
+          
+          if (start && end) {
+            const workdays = calculateWorkdays(start, end);
+            workdayCountElem.html(`<span style="color: #1E9FFF; font-weight: 500;">${workdays} workdays</span>`);
+          } else {
+            workdayCountElem.html(`<span style="color: #1E9FFF; font-weight: 500;">Please select a complete date range</span>`);
+          }
+        });
+      }
+      
+      // 添加新排期
+      function addSchedule(data) {
+        // 计算工作日天数
+        const workdayCount = calculateWorkdays(data.startDate, data.endDate);
+        
+        const newSchedule = {
+          id: Date.now(),
+          name: data.name,
+          description: data.description,
+          startDate: data.startDate,
+          endDate: data.endDate,
+          workdayCount: workdayCount,
+          color: colors[Math.floor(Math.random() * colors.length)]
+        };
+        
+        schedules.push(newSchedule);
+        saveSchedules();
+        
+        // 更新所有视图
+        renderCalendar();
+        renderList();
+      }
+      
+      // 删除排期
+      function deleteSchedule(id) {
+        layer.confirm('Are you sure you want to delete this schedule?', {
+          title: 'Confirm Delete',
+          btn: ['Yes', 'No']
+        }, function() {
+          schedules = schedules.filter(schedule => schedule.id !== id);
+          saveSchedules();
+          
+          // 更新所有视图
+          renderCalendar();
+          renderList();
+          
+          layer.closeAll('dialog');
+          layer.msg('Schedule deleted successfully');
+        });
+      }
+      
+      // 切换月份
+      function changeMonth(direction) {
+        currentDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + direction, 1);
+        renderCalendar();
+      }
+      
+      // 切换视图
+      function switchView(view) {
+        currentView = view;
+        
+        // 更新按钮状态
+        document.getElementById('calendarViewBtn').classList.toggle('active', view === 'calendar');
+        document.getElementById('listViewBtn').classList.toggle('active', view === 'list');
+        
+        // 更新视图显示
+        document.getElementById('calendarView').style.display = view === 'calendar' ? 'block' : 'none';
+        document.getElementById('listView').style.display = view === 'list' ? 'block' : 'none';
+      }
+      
+      // 绑定事件
+      function bindEvents() {
+        // 切换视图按钮
+        document.getElementById('calendarViewBtn').addEventListener('click', () => switchView('calendar'));
+        document.getElementById('listViewBtn').addEventListener('click', () => switchView('list'));
+        
+        // 添加排期按钮
+        document.getElementById('addScheduleBtn').addEventListener('click', showAddModal);
+        
+        // 月份切换按钮
+        document.getElementById('prevMonth').addEventListener('click', () => changeMonth(-1));
+        document.getElementById('nextMonth').addEventListener('click', () => changeMonth(1));
+        
+        // 表单提交
+        form.on('submit(submitSchedule)', function(data) {
+          addSchedule(data.field);
+          layer.close(modalIndex);
+          layer.msg('Schedule created successfully');
+          return false;
+        });
+      }
+    });
+  </script>
+</body>
+</html>
