@@ -347,7 +347,11 @@
         <div class="view-btn" id="listViewBtn">
           <i class="fa fa-list"></i> List
         </div>
-        
+       
+      <!-- 语言切换按钮 -->
+        <div class="view-btn" id="languageToggle">
+          <i class="fa fa-globe"></i> <span id="currentLanguage">中文</span>
+        </div>
       </div>
     </div>
     
@@ -421,7 +425,7 @@
         <label class="layui-form-label">Workday Count</label>
         <div class="layui-input-block">
           <div class="layui-form-text" id="workdayCount" style="line-height: 38px;">
-            <span style="color: #1E9FFF; font-weight: 500;">Please select the date range</span>
+            <span class="identity" style="color: #1E9FFF; font-weight: 500;">Please select the date range</span>
           </div>
         </div>
       </div>
@@ -446,6 +450,81 @@
       let schedules = [];
       let currentView = 'calendar';
       let modalIndex = null;
+      let currentLanguage = 'cn'; // 默认中文
+      
+      // 中英文对照文本
+      const translations = {
+        'cn': {
+          'New Schedule': '新建排期',
+          'Calendar': '日历',
+          'List': '列表',
+          'Sunday': '周日',
+          'Monday': '周一',
+          'Tuesday': '周二',
+          'Wednesday': '周三',
+          'Thursday': '周四',
+          'Friday': '周五',
+          'Saturday': '周六',
+          'Name': '名称',
+          'Please enter the name (up to 8 characters)': '请输入名称（最多8个字符）',
+          '事项名称不能超过8个字': '事项名称不能超过8个字',
+          'Description': '描述',
+          'Please enter the description (optional)': '请输入描述（可选）',
+          'Date Range': '日期范围',
+          'Please enter the start date': '请输入开始日期',
+          'Please enter the end date': '请输入结束日期',
+          'Workday Count': '工作日天数',
+          'Please select the date range': '请选择日期范围',
+          'Confirm': '确定',
+          'Cancel': '取消',
+          'No Data': '暂无数据',
+          'workdays': '工作日',
+          'Create New Schedule': '创建新排期',
+          'Please select a complete date range': '请选择完整的日期范围',
+          'Are you sure you want to delete this schedule?': '确定要删除这个排期吗？',
+          'Confirm Delete': '确认删除',
+          'Yes': '确定',
+          'No': '取消',
+          'Schedule deleted successfully': '排期删除成功',
+          'Schedule created successfully': '排期创建成功',
+          'to': '至'
+        },
+        'en': {
+          'New Schedule': 'New Schedule',
+          'Calendar': 'Calendar',
+          'List': 'List',
+          'Sunday': 'Sunday',
+          'Monday': 'Monday',
+          'Tuesday': 'Tuesday',
+          'Wednesday': 'Wednesday',
+          'Thursday': 'Thursday',
+          'Friday': 'Friday',
+          'Saturday': 'Saturday',
+          'Name': 'Name',
+          'Please enter the name (up to 8 characters)': 'Please enter the name (up to 8 characters)',
+          '事项名称不能超过8个字': 'Name cannot exceed 8 characters',
+          'Description': 'Description',
+          'Please enter the description (optional)': 'Please enter the description (optional)',
+          'Date Range': 'Date Range',
+          'Please enter the start date': 'Please enter the start date',
+          'Please enter the end date': 'Please enter the end date',
+          'Workday Count': 'Workday Count',
+          'Please select the date range': 'Please select the date range',
+          'Confirm': 'Confirm',
+          'Cancel': 'Cancel',
+          'No Data': 'No Data',
+          'workdays': 'workdays',
+          'Create New Schedule': 'Create New Schedule',
+          'Please select a complete date range': 'Please select a complete date range',
+          'Are you sure you want to delete this schedule?': 'Are you sure you want to delete this schedule?',
+          'Confirm Delete': 'Confirm Delete',
+          'Yes': 'Yes',
+          'No': 'No',
+          'Schedule deleted successfully': 'Schedule deleted successfully',
+          'Schedule created successfully': 'Schedule created successfully',
+          'to': 'to'
+        }
+      };
       
       // 颜色列表，用于区分不同排期
       const colors = [
@@ -456,9 +535,110 @@
       // 初始化
       init();
       
+      // 加载保存的语言设置
+      function loadLanguageSetting() {
+        const savedLanguage = localStorage.getItem('preferredLanguage');
+        if (savedLanguage) {
+          currentLanguage = savedLanguage;
+          document.getElementById('currentLanguage').textContent = currentLanguage === 'cn' ? '中文' : 'English';
+          translatePage();
+        }
+      }
+      
+      // 切换语言
+      function toggleLanguage() {
+        currentLanguage = currentLanguage === 'cn' ? 'en' : 'cn';
+        document.getElementById('currentLanguage').textContent = currentLanguage === 'cn' ? '中文' : 'English';
+        
+        // 保存语言设置
+        localStorage.setItem('preferredLanguage', currentLanguage);
+        
+        // 翻译页面
+        translatePage();
+      }
+      
+      // 翻译整个页面
+      function translatePage() {
+        // 翻译按钮文本
+        document.getElementById('calendarViewBtn').innerHTML = `<i class="fa fa-calendar"></i> ${translations[currentLanguage]['Calendar']}`;
+        document.getElementById('listViewBtn').innerHTML = `<i class="fa fa-list"></i> ${translations[currentLanguage]['List']}`;
+        document.getElementById('addScheduleBtn').innerHTML = `<i class="fa fa-plus"></i> ${translations[currentLanguage]['New Schedule']}`;
+        
+        // 翻译工作日显示
+        document.querySelectorAll('.weekday').forEach((element, index) => {
+          const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+          if (index < days.length) {
+            element.textContent = translations[currentLanguage][days[index]];
+          }
+        });
+        
+        // 更新日历标题格式
+        updateCalendarTitleFormat();
+        
+        // 重新渲染列表视图（因为包含日期显示）
+        renderList();
+        
+        // 如果弹窗打开，更新弹窗内容
+        if (modalIndex !== null) {
+          updateModalTranslations();
+        }
+      }
+      
+      // 更新日历标题格式
+      function updateCalendarTitleFormat() {
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth() + 1;
+        
+        if (currentLanguage === 'cn') {
+          document.getElementById('calendarMonth').textContent = `${year}年${month}月`;
+        } else {
+          document.getElementById('calendarMonth').textContent = `${month}/${year}`;
+        }
+      }
+      
+      // 更新弹窗内容翻译
+      function updateModalTranslations() {
+        const modal = document.querySelector('.layui-layer-content');
+        if (!modal) return;
+        
+        // 更新弹窗中的表单标签和按钮
+        modal.querySelectorAll('.layui-form-label').forEach(label => {
+          const text = label.textContent.trim();
+          if (translations[currentLanguage][text]) {
+            label.textContent = translations[currentLanguage][text];
+          }
+        });
+        
+        // 更新弹窗按钮
+        const confirmBtn = modal.querySelector('button[lay-submit]');
+        const cancelBtn = modal.querySelector('#cancelBtn');
+        if (confirmBtn) confirmBtn.textContent = translations[currentLanguage]['Confirm'];
+        if (cancelBtn) cancelBtn.textContent = translations[currentLanguage]['Cancel'];
+
+        // 更新placeholder
+        modal.querySelectorAll('.layui-input').forEach(input => {
+          if (input.placeholder) {
+            input.placeholder = translations[currentLanguage][input.placeholder.trim()];
+          }
+        });
+        modal.querySelectorAll('.layui-textarea').forEach(input => {
+          if (input.placeholder) {
+            input.placeholder = translations[currentLanguage][input.placeholder.trim()];
+          }
+        });
+        modal.querySelectorAll('.identity').forEach(input => {
+          if (input.textContent.trim()) {
+            input.textContent = translations[currentLanguage][input.textContent.trim()];
+          }
+        });
+      }
+      
       function init() {
         // 从本地存储加载数据
         loadSchedules();
+        
+        // 加载语言设置
+        loadLanguageSetting();
         
         // 渲染日历
         renderCalendar();
@@ -473,7 +653,7 @@
         form.verify({
           maxLength: function(value) {
             if (value.length > 8) {
-              return '事项名称不能超过8个字';
+              return translations[currentLanguage]['事项名称不能超过8个字'];
             }
           }
         });
@@ -565,7 +745,7 @@
           document.getElementById('scheduleList').innerHTML = `
             <div class="empty-state">
               <i class="fa fa-calendar-o"></i>
-              <div>No Data</div>
+              <div>${translations[currentLanguage]['No Data']}</div>
             </div>
           `;
           return;
@@ -580,7 +760,7 @@
                 <span class="color-dot" style="background-color: ${schedule.color}"></span>
                 <span>${schedule.name}</span>
               </div>
-              <div class="list-date">${schedule.startDate} to ${schedule.endDate} (${schedule.workdayCount} workdays)</div>
+              <div class="list-date">${schedule.startDate} ${translations[currentLanguage]['to']} ${schedule.endDate} (${schedule.workdayCount} ${translations[currentLanguage]['workdays']})</div>
                 ${schedule.description ? `<div class="list-desc">${schedule.description}</div>` : ''}
               </div>
               <button class="layui-btn layui-btn-danger layui-btn-sm delete-btn" data-id="${schedule.id}">
@@ -609,7 +789,7 @@
         // 打开弹窗
         modalIndex = layer.open({
           type: 1,
-          title: 'Create New Schedule',
+          title: translations[currentLanguage]['Create New Schedule'],
           content: tpl,
           area: ['60%', 'auto'],
           maxWidth: 500,
@@ -617,6 +797,9 @@
           success: function(layero) {
             // 在弹窗成功打开后初始化日期范围选择器（左右面板联动）
             initRangeDatePicker(layero);
+
+            // 初始化弹窗翻译
+            updateModalTranslations();
             
             // 绑定取消按钮事件
             layero.find('#cancelBtn').on('click', function() {
@@ -701,9 +884,9 @@
             // 如果两个日期都已选择，计算工作日天数
             if (start && end) {
               const workdays = calculateWorkdays(start, end);
-              workdayCountElem.html(`<span style="color: #1E9FFF; font-weight: 500;">${workdays} workdays</span>`);
+              workdayCountElem.html(`<span style="color: #1E9FFF; font-weight: 500;">${workdays} ${translations[currentLanguage]['workdays']}</span>`);
             } else {
-              workdayCountElem.html(`<span style="color: #1E9FFF; font-weight: 500;">Please select a complete date range</span>`);
+              workdayCountElem.html(`<span style="color: #1E9FFF; font-weight: 500;">${translations[currentLanguage]['Please select a complete date range']}</span>`);
             }
           }
         });
@@ -719,9 +902,9 @@
           
           if (start && end) {
             const workdays = calculateWorkdays(start, end);
-            workdayCountElem.html(`<span style="color: #1E9FFF; font-weight: 500;">${workdays} workdays</span>`);
+            workdayCountElem.html(`<span style="color: #1E9FFF; font-weight: 500;">${workdays} ${translations[currentLanguage]['workdays']}</span>`);
           } else {
-            workdayCountElem.html(`<span style="color: #1E9FFF; font-weight: 500;">Please select a complete date range</span>`);
+            workdayCountElem.html(`<span style="color: #1E9FFF; font-weight: 500;">${translations[currentLanguage]['Please select a complete date range']}</span>`);
           }
         });
       }
@@ -751,9 +934,9 @@
       
       // 删除排期
       function deleteSchedule(id) {
-        layer.confirm('Are you sure you want to delete this schedule?', {
-          title: 'Confirm Delete',
-          btn: ['Yes', 'No']
+        layer.confirm(translations[currentLanguage]['Are you sure you want to delete this schedule?'], {
+          title: translations[currentLanguage]['Confirm Delete'],
+          btn: [translations[currentLanguage]['Yes'], translations[currentLanguage]['No']]
         }, function() {
           schedules = schedules.filter(schedule => schedule.id !== id);
           saveSchedules();
@@ -763,7 +946,7 @@
           renderList();
           
           layer.closeAll('dialog');
-          layer.msg('Schedule deleted successfully');
+          layer.msg(translations[currentLanguage]['Schedule deleted successfully']);
         });
       }
       
@@ -792,6 +975,9 @@
         document.getElementById('calendarViewBtn').addEventListener('click', () => switchView('calendar'));
         document.getElementById('listViewBtn').addEventListener('click', () => switchView('list'));
         
+        // 语言切换按钮
+        document.getElementById('languageToggle').addEventListener('click', toggleLanguage);
+        
         // 添加排期按钮
         document.getElementById('addScheduleBtn').addEventListener('click', showAddModal);
         
@@ -803,7 +989,7 @@
         form.on('submit(submitSchedule)', function(data) {
           addSchedule(data.field);
           layer.close(modalIndex);
-          layer.msg('Schedule created successfully');
+          layer.msg(translations[currentLanguage]['Schedule created successfully']);
           return false;
         });
       }
