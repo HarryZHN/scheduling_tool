@@ -487,7 +487,8 @@
           'No': '取消',
           'Schedule deleted successfully': '排期删除成功',
           'Schedule created successfully': '排期创建成功',
-          'to': '至'
+          'to': '至',
+          'Schedule tool':'排期工具'
         },
         'en': {
           'New Schedule': 'New Schedule',
@@ -522,7 +523,8 @@
           'No': 'No',
           'Schedule deleted successfully': 'Schedule deleted successfully',
           'Schedule created successfully': 'Schedule created successfully',
-          'to': 'to'
+          'to': 'to',
+          'Schedule tool':'Schedule tool'
         }
       };
       
@@ -559,6 +561,9 @@
       
       // 翻译整个页面
       function translatePage() {
+
+        // 翻译标题
+        document.title = translations[currentLanguage]['Schedule tool'];
         // 翻译按钮文本
         document.getElementById('calendarViewBtn').innerHTML = `<i class="fa fa-calendar"></i> ${translations[currentLanguage]['Calendar']}`;
         document.getElementById('listViewBtn').innerHTML = `<i class="fa fa-list"></i> ${translations[currentLanguage]['List']}`;
