@@ -335,22 +335,31 @@
 <body>
   <div class="container">
     <div class="header">
-      <div class="title">
-        <button class="layui-btn layui-btn-primary" id="addScheduleBtn">
+      <div class="view-controls">
+        <button class="layui-btn layui-btn-sm" id="addScheduleBtn">
           <i class="fa fa-plus"></i> New Schedule
         </button>
-      </div>
-      <div class="view-controls">
         <div class="view-btn active" id="calendarViewBtn">
           <i class="fa fa-calendar"></i> Calendar
         </div>
         <div class="view-btn" id="listViewBtn">
           <i class="fa fa-list"></i> List
         </div>
+      </div>
+      <div class="view-controls">
+        
        
       <!-- 语言切换按钮 -->
         <div class="view-btn" id="languageToggle">
-          <i class="fa fa-globe"></i> <span id="currentLanguage">中文</span>
+          <i class="fa fa-globe"></i> <span id="currentLanguage">English</span>
+        </div>
+        <!-- 源码链接 -->
+        <a href="https://github.com/HarryZHN/scheduling_tool" target="_blank" class="view-btn" id="sourceCodeLink">
+          <i class="fa fa-github"></i> <span id="sourceCodeText">Source Code</span>
+        </a>
+        <!-- 激励作者 -->
+        <div class="view-btn" id="rewardAuthor">
+          <i class="fa fa-heart"></i> <span id="rewardText">Reward Author</span>
         </div>
       </div>
     </div>
@@ -467,7 +476,7 @@
           'Saturday': '周六',
           'Name': '名称',
           'Please enter the name (up to 8 characters)': '请输入名称（最多8个字符）',
-          '事项名称不能超过8个字': '事项名称不能超过8个字',
+          'Name cannot exceed 8 characters': '事项名称不能超过8个字',
           'Description': '描述',
           'Please enter the description (optional)': '请输入描述（可选）',
           'Date Range': '日期范围',
@@ -488,7 +497,12 @@
           'Schedule deleted successfully': '排期删除成功',
           'Schedule created successfully': '排期创建成功',
           'to': '至',
-          'Schedule tool':'排期工具'
+          'Schedule tool':'排期工具',
+          'Source Code': '源码',
+          'Reward Author': '激励作者',
+          'Thank you for your support!': '感谢您的支持！',
+          'Scan to support': '扫码支持',
+          'Close': '关闭'
         },
         'en': {
           'New Schedule': 'New Schedule',
@@ -503,7 +517,7 @@
           'Saturday': 'Saturday',
           'Name': 'Name',
           'Please enter the name (up to 8 characters)': 'Please enter the name (up to 8 characters)',
-          '事项名称不能超过8个字': 'Name cannot exceed 8 characters',
+          'Name cannot exceed 8 characters': 'Name cannot exceed 8 characters',
           'Description': 'Description',
           'Please enter the description (optional)': 'Please enter the description (optional)',
           'Date Range': 'Date Range',
@@ -524,7 +538,12 @@
           'Schedule deleted successfully': 'Schedule deleted successfully',
           'Schedule created successfully': 'Schedule created successfully',
           'to': 'to',
-          'Schedule tool':'Schedule tool'
+          'Schedule tool':'Schedule tool',
+          'Source Code': 'Source Code',
+          'Reward Author': 'Reward Author',
+          'Thank you for your support!': 'Thank you for your support!',
+          'Scan to support': 'Scan to support',
+          'Close': 'Close'
         }
       };
       
@@ -568,6 +587,8 @@
         document.getElementById('calendarViewBtn').innerHTML = `<i class="fa fa-calendar"></i> ${translations[currentLanguage]['Calendar']}`;
         document.getElementById('listViewBtn').innerHTML = `<i class="fa fa-list"></i> ${translations[currentLanguage]['List']}`;
         document.getElementById('addScheduleBtn').innerHTML = `<i class="fa fa-plus"></i> ${translations[currentLanguage]['New Schedule']}`;
+        document.getElementById('sourceCodeText').textContent = translations[currentLanguage]['Source Code'];
+        document.getElementById('rewardText').textContent = translations[currentLanguage]['Reward Author'];
         
         // 翻译工作日显示
         document.querySelectorAll('.weekday').forEach((element, index) => {
@@ -974,6 +995,37 @@
         document.getElementById('listView').style.display = view === 'list' ? 'block' : 'none';
       }
       
+      // 显示付款码弹窗
+      function showAlipayQRCode() {
+        // 创建弹窗内容
+        const content = `
+          <div style="text-align: center; padding: 20px;">
+            <h3 style="margin-bottom: 20px;">${translations[currentLanguage]['Thank you for your support!']}</h3>
+            <div style="display: flex; justify-content: center; gap: 30px; margin-bottom: 15px;">
+              <div>
+                <h4 style="margin-bottom: 10px;">支付宝</h4>
+                <img src="imgs/alipay.jpg" alt="支付宝付款码" style="width: 160px; height: 200px; border: 1px solid #ddd;"/>
+              </div>
+              <div>
+                <h4 style="margin-bottom: 10px;">微信</h4>
+                <img src="imgs/wechat.jpg" alt="微信付款码" style="width: 160px; height: 200px; border: 1px solid #ddd;"/>
+              </div>
+            </div>
+            <p>${translations[currentLanguage]['Scan to support']}</p>
+          </div>
+        `;
+        
+        // 打开弹窗
+        layer.open({
+          type: 1,
+          title: translations[currentLanguage]['Reward Author'],
+          content: content,
+          area: ['500px', 'auto'],
+          btn: [translations[currentLanguage]['Close']],
+          shade: 0.3
+        });
+      }
+      
       // 绑定事件
       function bindEvents() {
         // 切换视图按钮
@@ -982,6 +1034,9 @@
         
         // 语言切换按钮
         document.getElementById('languageToggle').addEventListener('click', toggleLanguage);
+        
+        // 激励作者按钮
+        document.getElementById('rewardAuthor').addEventListener('click', showAlipayQRCode);
         
         // 添加排期按钮
         document.getElementById('addScheduleBtn').addEventListener('click', showAddModal);
