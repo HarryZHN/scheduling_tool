@@ -162,6 +162,25 @@
       align-items: center;
     }
     
+    /* 列表操作按钮样式 */
+    .list-actions {
+      display: flex;
+      gap: 5px;
+    }
+    
+    /* 响应式设计 */
+    @media (max-width: 768px) {
+      .list-item {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+      }
+      
+      .list-actions {
+        justify-content: flex-end;
+      }
+    }
+    
     .list-item:last-child {
       border-bottom: none;
     }
@@ -495,6 +514,8 @@
           'No': '取消',
           'Schedule deleted successfully': '排期删除成功',
           'Schedule created successfully': '排期创建成功',
+          'Schedule edited successfully': '排期编辑成功',
+          'Edit Schedule': '编辑排期',
           'to': '至',
           'Schedule tool':'排期工具',
           'Source Code': '源码',
@@ -536,6 +557,8 @@
           'No': 'No',
           'Schedule deleted successfully': 'Schedule deleted successfully',
           'Schedule created successfully': 'Schedule created successfully',
+          'Schedule edited successfully': 'Schedule edited successfully',
+          'Edit Schedule': 'Edit Schedule',
           'to': 'to',
           'Schedule tool':'Schedule tool',
           'Source Code': 'Source Code',
@@ -745,7 +768,7 @@
           let scheduleHtml = '';
           daySchedules.forEach(schedule => {
             scheduleHtml += `<div class="schedule-item" style="background-color: ${schedule.color}" 
-                                 title="${schedule.name}\n${schedule.description}">
+                                 title="${schedule.name}\n${schedule.description}" data-id="${schedule.id}">
                               ${schedule.name}
                             </div>`;
           });
@@ -758,6 +781,14 @@
         
         // 填充日历容器
         document.getElementById('calendarDays').innerHTML = calendarHtml;
+        
+        // 绑定日历中的排期项点击事件
+        document.querySelectorAll('.schedule-item').forEach(item => {
+          item.addEventListener('click', function() {
+            const id = parseInt(this.getAttribute('data-id'));
+            showEditModal(id);
+          });
+        });
       }
       
       // 渲染列表
@@ -789,9 +820,14 @@
               <div class="list-date">${schedule.startDate} ${translations[currentLanguage]['to']} ${schedule.endDate} (${schedule.workdayCount} ${translations[currentLanguage]['workdays']})</div>
                 ${schedule.description ? `<div class="list-desc">${schedule.description}</div>` : ''}
               </div>
-              <button class="layui-btn layui-btn-danger layui-btn-sm delete-btn" data-id="${schedule.id}">
-                <i class="layui-icon layui-icon-delete"></i>
-              </button>
+              <div class="list-actions">
+                <button class="layui-btn layui-btn-primary layui-btn-sm edit-btn" data-id="${schedule.id}">
+                  <i class="layui-icon layui-icon-edit"></i>
+                </button>
+                <button class="layui-btn layui-btn-danger layui-btn-sm delete-btn" data-id="${schedule.id}">
+                  <i class="layui-icon layui-icon-delete"></i>
+                </button>
+              </div>
             </div>
           `;
         });
@@ -803,6 +839,14 @@
           btn.addEventListener('click', function() {
             const id = parseInt(this.getAttribute('data-id'));
             deleteSchedule(id);
+          });
+        });
+        
+        // 绑定编辑按钮事件
+        document.querySelectorAll('.edit-btn').forEach(btn => {
+          btn.addEventListener('click', function() {
+            const id = parseInt(this.getAttribute('data-id'));
+            showEditModal(id);
           });
         });
       }
@@ -822,6 +866,50 @@
           shade: 0.3,
           success: function(layero) {
             // 在弹窗成功打开后初始化日期范围选择器（左右面板联动）
+            initRangeDatePicker(layero);
+
+            // 初始化弹窗翻译
+            updateModalTranslations();
+            
+            // 绑定取消按钮事件
+            layero.find('#cancelBtn').on('click', function() {
+              layer.close(modalIndex);
+            });
+          }
+        });
+      }
+      
+      // 显示编辑排期弹窗
+      function showEditModal(id) {
+        const scheduleToEdit = schedules.find(schedule => schedule.id === id);
+        if (!scheduleToEdit) return;
+        
+        // 使用模板渲染弹窗内容
+        const tpl = document.getElementById('scheduleModalTpl').innerHTML;
+        
+        // 打开弹窗
+        modalIndex = layer.open({
+          type: 1,
+          title: translations[currentLanguage]['Edit Schedule'],
+          content: tpl,
+          area: ['60%', 'auto'],
+          maxWidth: 500,
+          shade: 0.3,
+          success: function(layero) {
+            // 填充表单数据
+            layero.find('input[name="name"]').val(scheduleToEdit.name);
+            layero.find('textarea[name="description"]').val(scheduleToEdit.description);
+            layero.find('input[name="startDate"]').val(scheduleToEdit.startDate);
+            layero.find('input[name="endDate"]').val(scheduleToEdit.endDate);
+            
+            // 更新工作日显示
+            layero.find('#workdayCount').html(`<span style="color: #1E9FFF; font-weight: 500;">${scheduleToEdit.workdayCount} ${translations[currentLanguage]['workdays']}</span>`);
+            
+            // 存储当前编辑的排期ID到表单
+            const formElement = layero.find('form')[0];
+            formElement.setAttribute('data-scheduleId', scheduleToEdit.id);
+            
+            // 初始化日期范围选择器
             initRangeDatePicker(layero);
 
             // 初始化弹窗翻译
@@ -958,6 +1046,30 @@
         renderList();
       }
       
+      // 编辑排期
+      function editSchedule(id, data) {
+        // 计算工作日天数
+        const workdayCount = calculateWorkdays(data.startDate, data.endDate);
+        
+        const index = schedules.findIndex(schedule => schedule.id === id);
+        if (index !== -1) {
+          schedules[index] = {
+            ...schedules[index],
+            name: data.name,
+            description: data.description,
+            startDate: data.startDate,
+            endDate: data.endDate,
+            workdayCount: workdayCount
+          };
+          
+          saveSchedules();
+          
+          // 更新所有视图
+          renderCalendar();
+          renderList();
+        }
+      }
+      
       // 删除排期
       function deleteSchedule(id) {
         layer.confirm(translations[currentLanguage]['Are you sure you want to delete this schedule?'], {
@@ -1047,9 +1159,24 @@
         
         // 表单提交
         form.on('submit(submitSchedule)', function(data) {
-          addSchedule(data.field);
-          layer.close(modalIndex);
-          layer.msg(translations[currentLanguage]['Schedule created successfully']);
+          // 获取表单数据
+          const formData = data.field;
+          // 获取表单元素（使用原生JavaScript）
+          const formElement = document.querySelector('.layui-form[lay-filter="scheduleForm"]');
+          // 获取排期ID（编辑模式）
+          const scheduleId = formElement.getAttribute('data-scheduleId');
+           
+          if (scheduleId) {
+            // 编辑模式
+            editSchedule(parseInt(scheduleId), formData);
+            layer.close(modalIndex);
+            layer.msg(translations[currentLanguage]['Schedule edited successfully']);
+          } else {
+            // 创建模式
+            addSchedule(formData);
+            layer.close(modalIndex);
+            layer.msg(translations[currentLanguage]['Schedule created successfully']);
+          }
           return false;
         });
       }
