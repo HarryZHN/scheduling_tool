@@ -402,8 +402,8 @@
       <div class="layui-form-item">
         <label class="layui-form-label">Name</label>
         <div class="layui-input-block">
-          <input type="text" name="name" lay-verify="required|maxLength" maxlength="8" 
-                 placeholder="Please enter the name (up to 8 characters)" autocomplete="off" class="layui-input">
+          <input type="text" name="name" lay-verify="required|maxLength" maxlength="10" 
+                 placeholder="Please enter the name (up to 10 characters)" autocomplete="off" class="layui-input">
         </div>
       </div>
       
@@ -474,8 +474,8 @@
           'Friday': '周五',
           'Saturday': '周六',
           'Name': '名称',
-          'Please enter the name (up to 8 characters)': '请输入名称（最多8个字符）',
-          'Name cannot exceed 8 characters': '事项名称不能超过8个字',
+          'Please enter the name (up to 10 characters)': '请输入名称（最多10个字符）',
+          'Name cannot exceed 10 characters': '事项名称不能超过10个字',
           'Description': '描述',
           'Please enter the description (optional)': '请输入描述（可选）',
           'Date Range': '日期范围',
@@ -515,8 +515,8 @@
           'Friday': 'Friday',
           'Saturday': 'Saturday',
           'Name': 'Name',
-          'Please enter the name (up to 8 characters)': 'Please enter the name (up to 8 characters)',
-          'Name cannot exceed 8 characters': 'Name cannot exceed 8 characters',
+          'Please enter the name (up to 10 characters)': 'Please enter the name (up to 10 characters)',
+          'Name cannot exceed 10 characters': 'Name cannot exceed 10 characters',
           'Description': 'Description',
           'Please enter the description (optional)': 'Please enter the description (optional)',
           'Date Range': 'Date Range',
@@ -677,8 +677,8 @@
         // 自定义表单验证
         form.verify({
           maxLength: function(value) {
-            if (value.length > 8) {
-              return translations[currentLanguage]['事项名称不能超过8个字'];
+            if (value.length > 10) {
+              return translations[currentLanguage]['Name cannot exceed 10 characters'];
             }
           }
         });
